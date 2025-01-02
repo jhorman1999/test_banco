@@ -1,0 +1,21 @@
+package com.example.demo.Services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.demo.interfaces.TO1_SolicitudInterface;
+import com.example.demo.models.T01_Solicitud;
+
+@Service
+public class T01_SolicitudServices {
+
+	@Autowired
+	private TO1_SolicitudInterface t01To1_SolicitudInterface;
+	
+	public List<T01_Solicitud> getAll(){
+		return t01To1_SolicitudInterface.findAll();
+	}
+	
+}
