@@ -25,77 +25,94 @@ import com.example.demo.models.T01_Solicitud;
 @RequestMapping("/api/t01_solicitud")
 public class T01_SolicitudController {
 
-	//service
+	// service
 	@Autowired
 	T01_SolicitudServices t01_SolicitudServices;
-	
+
 	@GetMapping
-	public List<T01_Solicitud> getAllSolicitud(){
+	public List<T01_Solicitud> getAllSolicitud() {
 		return t01_SolicitudServices.getAll();
 	}
-	
+
 	@GetMapping("/{id}")
-	public ResponseEntity<T01_Solicitud> getSolicitud(@PathVariable Integer id){
-		
-		T01_Solicitud solicitud = t01_SolicitudServices.getSolicitudId(id);
-		return ResponseEntity.ok(solicitud);
-		
+	public ResponseEntity getSolicitud(@PathVariable Integer id) {
+		try {
+			T01_Solicitud solicitud = t01_SolicitudServices.getSolicitudId(id);
+			return ResponseEntity.ok(solicitud);
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("{ocurrio un error inesperado}");
+
+		}
+
 	}
-	
+
 	@PostMapping
-	public ResponseEntity postSolicitud(@RequestBody T01_Solicitud solicitud){
-		Double montoMinimo = 1000000.;
-		
-		if(solicitud.getMonto() <  montoMinimo) {
-			return ResponseEntity.badRequest().body("El monto debe ser mayor a un millon"); 
-		}
-		
-		Date today = new Date();
-		
-		ValidateDate validateDate = new ValidateDate();
-		
-		if(solicitud.getFechaIngreso().before(today)  ) {
-			if(!validateDate.isToday2(today)){
-				return ResponseEntity.badRequest().body("la fecha debe ser igual o mayor a hoy"); 
+	public ResponseEntity postSolicitud(@RequestBody T01_Solicitud solicitud) {
+		try {
+			Double montoMinimo = 1000000.;
 
+			if (solicitud.getMonto() < montoMinimo) {
+				return ResponseEntity.badRequest().body("El monto debe ser mayor a un millon");
 			}
+
+			Date today = new Date();
+
+			ValidateDate validateDate = new ValidateDate();
+
+			if (solicitud.getFechaIngreso().before(today)) {
+				if (!validateDate.isToday2(today)) {
+					return ResponseEntity.badRequest().body("la fecha debe ser igual o mayor a hoy");
+
+				}
+			}
+
+			List<T01_Solicitud> exisSolicitud = t01_SolicitudServices.getSolicitudIdCliente(solicitud.getIdCliente());
+
+			if (exisSolicitud != null) {
+				return ResponseEntity.badRequest().body("el cliente ya tiene una solicitud");
+			}
+
+			T01_Solicitud saveSolicitud = t01_SolicitudServices.saveSolicitud(solicitud);
+
+			return ResponseEntity.ok(saveSolicitud);
+
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("{ocurrio un error inesperado}");
+
 		}
-		
-		List<T01_Solicitud> exisSolicitud = t01_SolicitudServices.getSolicitudIdCliente(solicitud.getIdCliente());
-		
-		if(exisSolicitud != null) {
-			return ResponseEntity.badRequest().body("el cliente ya tiene una solicitud"); 
-		}
-		
-		T01_Solicitud saveSolicitud = t01_SolicitudServices.saveSolicitud(solicitud);
-			
-		return ResponseEntity.ok(saveSolicitud);
 	}
-	
+
 	@PutMapping
-	public ResponseEntity<T01_Solicitud> putSolicitud(@RequestBody T01_Solicitud solicitud){
+	public ResponseEntity putSolicitud(@RequestBody T01_Solicitud solicitud) {
 		T01_Solicitud exitsSolicitud = t01_SolicitudServices.getSolicitudId(solicitud.getIdSolicitud());
-		
-		if(exitsSolicitud == null) {
-			return ResponseEntity.notFound().build();
+		try {
+			if (exitsSolicitud == null) {
+				return ResponseEntity.notFound().build();
+			}
+
+			exitsSolicitud.setEstado(solicitud.getEstado());
+			exitsSolicitud.setFechaIngreso(solicitud.getFechaIngreso());
+			exitsSolicitud.setMonto(solicitud.getMonto());
+			exitsSolicitud.setIdCliente(solicitud.getIdCliente());
+
+			T01_Solicitud saveSolicitud = t01_SolicitudServices.saveSolicitud(exitsSolicitud);
+
+			return ResponseEntity.ok(saveSolicitud);
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("{ocurrio un error inesperado}");
+
 		}
-		
-		exitsSolicitud.setEstado(solicitud.getEstado());
-		exitsSolicitud.setFechaIngreso(solicitud.getFechaIngreso());
-		exitsSolicitud.setMonto(solicitud.getMonto());
-		exitsSolicitud.setIdCliente(solicitud.getIdCliente());
-
-		T01_Solicitud saveSolicitud= t01_SolicitudServices.saveSolicitud(exitsSolicitud);
-		
-		return  ResponseEntity.ok(saveSolicitud);
 	}
-	
+
 	@DeleteMapping("/{id}")
-	public ResponseEntity<T01_Solicitud> postSolicitud(@PathVariable Integer id){
+	public ResponseEntity postSolicitud(@PathVariable Integer id) {
+		try {
+			t01_SolicitudServices.delete(id);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("{ocurrio un error inesperado}");
 
-		t01_SolicitudServices.delete(id);
-		return ResponseEntity.ok().build();
+		}
 	}
-	
-	
+
 }
